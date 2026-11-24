@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MAKOIL Billing & Invoicing System</title>
+  <meta name="description" content="GST Billing, Receipts, Customer Ledgers, and Input ITC Management for MAKOIL">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 pb-28 md:pb-24">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Top App Bar / Header -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo & Brand Info -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-700 text-white flex items-center justify-center font-black text-lg shadow-md shadow-sky-500/20 tracking-wider">
+            M
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-extrabold text-slate-900 text-lg tracking-tight">MAK<span class="text-sky-600">OIL</span></span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200 uppercase tracking-wider">GST Billing</span>
+            </div>
+            <p class="text-xs text-slate-400 hidden sm:block">Automotive & Industrial Lubricants Ledger</p>
+          </div>
+        </div>
+
+        <!-- Top Right Actions -->
+        <div class="flex items-center space-x-2">
+          <div class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 rounded-xl text-xs text-slate-600 font-mono">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>GSTIN: 29AAAAA0000A1Z5</span>
+          </div>
+          <button onclick="toggleMenuSheet()" title="Open Menu" class="p-2 text-slate-600 hover:text-sky-600 hover:bg-slate-100 rounded-xl transition cursor-pointer md:hidden">
+            <i data-lucide="more-vertical" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main id="mainContent" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div id="pageContent" class="transition-opacity duration-200">
+      <!-- Dynamic Content Rendered Here via app.js -->
+    </div>
+  </main>
+
+  <!-- Backdrop for 3-Dot Bottom Menu -->
+  <div id="menuBackdrop" onclick="closeMenuSheet()" class="fixed inset-0 bg-slate-900/40 z-40 hidden modal-backdrop transition-opacity"></div>
+
+  <!-- 3-DOT MENU SHEET (Popup from bottom / center) -->
+  <div id="menuSheet" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200/80 p-5 hidden menu-sheet">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+      <div class="flex items-center space-x-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+        <h3 class="font-bold text-slate-900 text-base">Select Page & Actions</h3>
+      </div>
+      <button onclick="closeMenuSheet()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <p class="text-xs text-slate-500 mb-3">Switch directly between billing sections (Customers is selected by default):</p>
+
+    <!-- Page Selection List -->
+    <div class="space-y-1.5 mb-4">
+      <!-- Customers Option (Default) -->
+      <button onclick="setActivePage('customers')" data-menu-page="customers" class="w-full flex items-center justify-between p-3 rounded-2xl border transition cursor-pointer text-left">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 rounded-xl bg-sky-100 text-sky-600">
+            <i data-lucide="users" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="text-sm font-semibold text-slate-800">Customers</div>
+            <div class="text-xs text-slate-400">Ledger, Contacts & Due Balances (Default)</div>
+          </div>
+        </div>
+        <div class="menu-check text-sky-600 hidden">
+          <i data-lucide="check-circle" class="w-5 h-5"></i>
+        </div>
+      </button>
+
+      <!-- Receipts Option -->
+      <button onclick="setActivePage('receipts')" data-menu-page="receipts" class="w-full flex items-center justify-between p-3 rounded-2xl border transition cursor-pointer text-left">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 rounded-xl bg-emerald-100 text-emerald-600">
+            <i data-lucide="receipt" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="text-sm font-semibold text-slate-800">Receipts</div>
+            <div class="text-xs text-slate-400">Payment collections, UPI, Bank & Cash</div>
+          </div>
+        </div>
+        <div class="menu-check text-sky-600 hidden">
+          <i data-lucide="check-circle" class="w-5 h-5"></i>
+        </div>
+      </button>
+
+      <!-- GST Bill Option -->
+      <button onclick="setActivePage('gstBill')" data-menu-page="gstBill" class="w-full flex items-center justify-between p-3 rounded-2xl border transition cursor-pointer text-left">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 rounded-xl bg-indigo-100 text-indigo-600">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="text-sm font-semibold text-slate-800">GST Bill</div>
+            <div class="text-xs text-slate-400">Tax Invoices, CGST/SGST/IGST breakdown</div>
+          </div>
+        </div>
+        <div class="menu-check text-sky-600 hidden">
+          <i data-lucide="check-circle" class="w-5 h-5"></i>
+        </div>
+      </button>
+
+      <!-- Input Bills Option -->
+      <button onclick="setActivePage('inputBills')" data-menu-page="inputBills" class="w-full flex items-center justify-between p-3 rounded-2xl border transition cursor-pointer text-left">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 rounded-xl bg-amber-100 text-amber-600">
+            <i data-lucide="inbox" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="text-sm font-semibold text-slate-800">Input Bills</div>
+            <div class="text-xs text-slate-400">Supplier purchases & Input Tax Credit (ITC)</div>
+          </div>
+        </div>
+        <div class="menu-check text-sky-600 hidden">
+          <i data-lucide="check-circle" class="w-5 h-5"></i>
+        </div>
+      </button>
+    </div>
+
+    <!-- Quick Utilities -->
+    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+      <button onclick="exportDataJSON()" class="flex items-center text-slate-600 hover:text-sky-600 p-1.5 font-medium cursor-pointer">
+        <i data-lucide="download" class="w-3.5 h-3.5 mr-1"></i> Export Data
+      </button>
+      <button onclick="resetToSampleData()" class="flex items-center text-rose-600 hover:text-rose-700 p-1.5 font-medium cursor-pointer">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1"></i> Reset Samples
+      </button>
+    </div>
+  </div>
+
+  <!-- FIXED BOTTOM DOCK NAVIGATION (with 3-dot Menu at bottom) -->
+  <nav class="fixed bottom-0 inset-x-0 z-40 bottom-dock border-t border-slate-200/80 px-2 sm:px-4 py-2">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      
+      <!-- 1. Customers Tab (Default Selected) -->
+      <button onclick="setActivePage('customers')" data-page-btn="customers" class="relative flex-1 py-1 px-1 flex flex-col items-center justify-center text-xs transition cursor-pointer group">
+        <span class="active-pill absolute -top-2 w-8 h-1 bg-sky-600 rounded-full hidden"></span>
+        <i data-lucide="users" class="w-5 h-5 mb-1 group-hover:scale-110 transition-transform"></i>
+        <span class="text-[11px]">Customers</span>
+      </button>
+
+      <!-- 2. Receipts Tab -->
+      <button onclick="setActivePage('receipts')" data-page-btn="receipts" class="relative flex-1 py-1 px-1 flex flex-col items-center justify-center text-xs transition cursor-pointer group text-slate-500">
+        <span class="active-pill absolute -top-2 w-8 h-1 bg-sky-600 rounded-full hidden"></span>
+        <i data-lucide="receipt" class="w-5 h-5 mb-1 group-hover:scale-110 transition-transform"></i>
+        <span class="text-[11px]">Receipts</span>
+      </button>
+
+      <!-- 3. GST Bill Tab -->
+      <button onclick="setActivePage('gstBill')" data-page-btn="gstBill" class="relative flex-1 py-1 px-1 flex flex-col items-center justify-center text-xs transition cursor-pointer group text-slate-500">
+        <span class="active-pill absolute -top-2 w-8 h-1 bg-sky-600 rounded-full hidden"></span>
+        <i data-lucide="file-text" class="w-5 h-5 mb-1 group-hover:scale-110 transition-transform"></i>
+        <span class="text-[11px]">GST Bill</span>
+      </button>
+
+      <!-- 4. Input Bills Tab -->
+      <button onclick="setActivePage('inputBills')" data-page-btn="inputBills" class="relative flex-1 py-1 px-1 flex flex-col items-center justify-center text-xs transition cursor-pointer group text-slate-500">
+        <span class="active-pill absolute -top-2 w-8 h-1 bg-sky-600 rounded-full hidden"></span>
+        <i data-lucide="inbox" class="w-5 h-5 mb-1 group-hover:scale-110 transition-transform"></i>
+        <span class="text-[11px]">Input Bills</span>
+      </button>
+
+      <!-- 5. THREE DOT MENU BUTTON AT THE BOTTOM -->
+      <button onclick="toggleMenuSheet()" id="bottomThreeDotBtn" title="More Options & Pages" class="relative flex-1 py-1 px-1 flex flex-col items-center justify-center text-xs text-slate-600 hover:text-sky-600 transition cursor-pointer group">
+        <div class="w-9 h-7 rounded-full bg-slate-100 group-hover:bg-sky-50 flex items-center justify-center mb-0.5 shadow-xs">
+          <i data-lucide="more-horizontal" class="w-5 h-5 text-slate-700 group-hover:text-sky-600"></i>
+        </div>
+        <span class="text-[10px] font-medium text-slate-500">Menu</span>
+      </button>
+
+    </div>
+  </nav>
+
+  <!-- ============================================== -->
+  <!-- MODALS -->
+  <!-- ============================================== -->
+
+  <!-- Customer Modal -->
+  <div id="customerModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 hidden modal-backdrop">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 id="customerModalTitle" class="text-lg font-bold text-slate-900">Add Customer</h3>
+        <button onclick="closeCustomerModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="customerForm" onsubmit="handleCustomerSubmit(event)" class="p-6 space-y-4">
+        <input type="hidden" id="custIdInput">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Customer / Garage / Company Name *</label>
+          <input type="text" id="custName" required placeholder="e.g. Shree Krishna Auto Works" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Phone Number</label>
+            <input type="text" id="custPhone" placeholder="+91 98451 22345" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+            <input type="email" id="custEmail" placeholder="client@example.com" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">GSTIN (15 Digits)</label>
+            <input type="text" id="custGstin" maxlength="15" placeholder="29ABCDE1234F1Z5" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono uppercase focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">State / Code</label>
+            <input type="text" id="custState" value="Karnataka (29)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">City / Town</label>
+            <input type="text" id="custCity" placeholder="Hubballi" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Opening Balance (₹ Due)</label>
+            <input type="number" step="any" id="custBalance" value="0" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Billing Address</label>
+          <textarea id="custAddress" rows="2" placeholder="Street, Industrial Area, Landmark" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"></textarea>
+        </div>
+        <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeCustomerModal()" class="px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 text-sm font-medium bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-sm transition cursor-pointer">Save Customer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Receipt Modal -->
+  <div id="receiptModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 hidden modal-backdrop">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-slate-900">Record Payment Receipt</h3>
+        <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="receiptForm" onsubmit="handleReceiptSubmit(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Select Customer *</label>
+          <select id="receiptCustomerSelect" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"></select>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Receipt Number</label>
+            <input type="text" id="receiptNo" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Receipt Date</label>
+            <input type="date" id="receiptDate" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Amount Received (₹) *</label>
+            <input type="number" step="any" min="1" id="receiptAmount" required placeholder="0.00" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-emerald-600">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Payment Mode</label>
+            <select id="receiptMode" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+              <option value="UPI / QR">UPI / QR (GPay / PhonePe / Paytm)</option>
+              <option value="NEFT / RTGS">Bank Transfer (NEFT / RTGS)</option>
+              <option value="Cash">Cash</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Reference / UTR / Cheque No</label>
+          <input type="text" id="receiptRefNo" placeholder="e.g. UPI/3910283019 or CHQ#4412" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Notes / Remarks</label>
+          <input type="text" id="receiptNotes" placeholder="Part payment against invoice #..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+        </div>
+        <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeReceiptModal()" class="px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm transition cursor-pointer">Save Receipt</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- GST Bill Modal -->
+  <div id="gstBillModal" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 hidden modal-backdrop overflow-y-auto">
+    <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-200 my-8">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900">Create GST Tax Invoice</h3>
+          <p class="text-xs text-slate-400">Generate legal GST invoice for MAKOIL lubricants</p>
+        </div>
+        <button onclick="closeGstBillModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="gstBillForm" onsubmit="handleGstBillSubmit(event)" class="p-6 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Billed To (Customer) *</label>
+            <select id="invCustomerSelect" required onchange="onInvoiceCustomerChange()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Invoice Number</label>
+            <input type="text" id="invNumber" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono">
+          </div>
+        </div>
+
+        <div id="invCustomerInfo"></div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Invoice Date</label>
+            <input type="date" id="invDate" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Due Date</label>
+            <input type="date" id="invDueDate" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Payment Status</label>
+            <select id="invStatusSelect" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+              <option value="Unpaid">Unpaid</option>
+              <option value="Paid">Paid</option>
+              <option value="Partial">Partial</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 pt-1">
+          <input type="checkbox" id="invIsInterState" onchange="calculateInvoiceTotals()" class="w-4 h-4 text-indigo-600 rounded">
+          <label for="invIsInterState" class="text-xs font-medium text-slate-700 cursor-pointer">
+            Inter-State Supply (Apply IGST instead of CGST + SGST)
+          </label>
+        </div>
+
+        <!-- Items Table -->
+        <div class="border border-slate-200 rounded-2xl p-3 bg-slate-50/50">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Line Items</span>
+            <button type="button" onclick="addInvoiceItemRow()" class="inline-flex items-center text-xs font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer">
+              <i data-lucide="plus" class="w-3.5 h-3.5 mr-1"></i> Add Row
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="text-[11px] font-semibold text-slate-500 uppercase">
+                  <th>Product / Service</th>
+                  <th>HSN</th>
+                  <th>Qty</th>
+                  <th>Unit</th>
+                  <th>Rate (₹)</th>
+                  <th>GST</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="invItemsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Invoice Calculation Summary -->
+        <div class="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="text-xs space-y-1">
+            <div class="text-slate-600">Taxable Subtotal: <strong id="invSubtotalDisplay" class="font-mono text-slate-800">₹0.00</strong></div>
+            <div class="text-slate-600">Tax: <span id="invTaxBreakdownDisplay" class="font-mono text-indigo-700 font-semibold">₹0.00</span></div>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-500 block uppercase font-bold tracking-wider">Grand Total</span>
+            <span id="invGrandTotalDisplay" class="text-2xl font-black text-indigo-700 font-mono">₹0.00</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Invoice Notes / Terms</label>
+          <input type="text" id="invNotes" placeholder="Goods once sold cannot be returned. 18% p.a. interest after due date." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+        </div>
+
+        <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeGstBillModal()" class="px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm transition cursor-pointer">Generate Invoice</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Input Bill Modal -->
+  <div id="inputBillModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 hidden modal-backdrop">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-slate-900">Record Input Bill (Purchase / ITC)</h3>
+        <button onclick="closeInputBillModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="inputBillForm" onsubmit="handleInputBillSubmit(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Supplier Name *</label>
+          <input type="text" id="inputSupplierName" required placeholder="e.g. Bharat Petroleum Corporation Ltd" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Supplier GSTIN</label>
+            <input type="text" id="inputSupplierGstin" placeholder="29AAACB2902M1ZP" maxlength="15" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono uppercase">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Supplier Bill / Invoice #</label>
+            <input type="text" id="inputBillNumber" required placeholder="BPCL-99120" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Bill Date</label>
+            <input type="date" id="inputBillDate" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Expense Category</label>
+            <select id="inputCategory" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+              <option value="Base Oil & Bulk Lubricants">Base Oil & Bulk Lubricants</option>
+              <option value="Greases & Additives">Greases & Additives</option>
+              <option value="Packaging (Barrels / Bottles)">Packaging (Barrels / Bottles)</option>
+              <option value="Freight & Logistics">Freight & Logistics</option>
+              <option value="Maintenance & Utilities">Maintenance & Utilities</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Taxable Amount (₹) *</label>
+            <input type="number" step="any" min="1" id="inputTaxable" required placeholder="0.00" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">GST Rate</label>
+            <select id="inputGstRate" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono">
+              <option value="18">18%</option>
+              <option value="12">12%</option>
+              <option value="28">28%</option>
+              <option value="5">5%</option>
+              <option value="0">0%</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="flex items-center space-x-2 text-xs font-medium text-slate-700 cursor-pointer">
+            <input type="checkbox" id="inputIsInterState" class="w-4 h-4 text-amber-600 rounded">
+            <span>Inter-State (IGST)</span>
+          </label>
+          <label class="flex items-center space-x-2 text-xs font-medium text-emerald-700 cursor-pointer">
+            <input type="checkbox" id="inputItcEligible" checked class="w-4 h-4 text-emerald-600 rounded">
+            <span>Eligible for ITC Credit</span>
+          </label>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Payment Status</label>
+          <select id="inputPaymentStatus" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+            <option value="Paid">Paid</option>
+            <option value="Due">Due / Payable</option>
+          </select>
+        </div>
+        <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeInputBillModal()" class="px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 text-sm font-medium bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-sm transition cursor-pointer">Save Input Bill</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Printable Area for Invoices & Receipts -->
+  <div id="printArea"></div>
+
+  <!-- App Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
