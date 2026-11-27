@@ -26,63 +26,88 @@ const defaultState = {
   customers: [
     {
       id: 'cust-1',
-      name: 'Shree Krishna Auto Works',
+      name: 'Rajesh Sharma',
+      shopName: 'Shree Krishna Auto Works',
       phone: '+91 98451 22345',
+      primaryNumber: '+91 98451 22345',
+      secondaryNumber: '+91 836 2211445',
       email: 'skautoworks@gmail.com',
       gstin: '29ABCDE1234F1Z5',
+      gstNumber: '29ABCDE1234F1Z5',
       address: 'Plot 45, Auto Nagar, Gokul Road',
       city: 'Hubballi',
       state: 'Karnataka (29)',
       balance: 45200,
-      creditLimit: 100000
+      creditLimit: 100000,
+      photo: ''
     },
     {
       id: 'cust-2',
-      name: 'National Logistics & Transport Fleet',
+      name: 'Gurpreet Singh',
+      shopName: 'National Logistics & Transport Fleet',
       phone: '+91 98860 33411',
+      primaryNumber: '+91 98860 33411',
+      secondaryNumber: '+91 94480 11223',
       email: 'transport.national@yahoo.com',
       gstin: '29PQRS5678M1Z2',
+      gstNumber: '29PQRS5678M1Z2',
       address: '12/A Highway Yard, Nelamangala',
       city: 'Bengaluru',
       state: 'Karnataka (29)',
       balance: 112000,
-      creditLimit: 250000
+      creditLimit: 250000,
+      photo: ''
     },
     {
       id: 'cust-3',
-      name: 'Mahalaxmi Earthmovers & Mining',
+      name: 'Sanjay Patil',
+      shopName: 'Mahalaxmi Earthmovers & Mining',
       phone: '+91 94481 99012',
+      primaryNumber: '+91 94481 99012',
+      secondaryNumber: '+91 94220 55441',
       email: 'mahalaxmiearth@gmail.com',
       gstin: '27AABCM7789C1ZT',
+      gstNumber: '27AABCM7789C1ZT',
       address: 'Sector 3, MIDC Shiroli',
       city: 'Kolhapur',
       state: 'Maharashtra (27)',
       balance: 18500,
-      creditLimit: 75000
+      creditLimit: 75000,
+      photo: ''
     },
     {
       id: 'cust-4',
-      name: 'Apex Precision Engineering Works',
+      name: 'Venkatesh Rao',
+      shopName: 'Apex Precision Engineering Works',
       phone: '+91 94220 88716',
+      primaryNumber: '+91 94220 88716',
+      secondaryNumber: '',
       email: 'purchase@apexeng.in',
       gstin: '29AAACH4532B1ZX',
+      gstNumber: '29AAACH4532B1ZX',
       address: 'Peenya 2nd Stage, Industrial Estate',
       city: 'Bengaluru',
       state: 'Karnataka (29)',
       balance: 0,
-      creditLimit: 100000
+      creditLimit: 100000,
+      photo: ''
     },
     {
       id: 'cust-5',
-      name: 'Sai Ram Service Station & Spares',
+      name: 'Anand Bhat',
+      shopName: 'Sai Ram Service Station & Spares',
       phone: '+91 97412 55678',
+      primaryNumber: '+91 97412 55678',
+      secondaryNumber: '+91 8384 226100',
       email: 'sairamservice@gmail.com',
       gstin: '29BZCP8901L1Z9',
+      gstNumber: '29BZCP8901L1Z9',
       address: 'Main Road, Near Old Bus Stand',
       city: 'Sirsi',
       state: 'Karnataka (29)',
       balance: 28400,
-      creditLimit: 60000
+      creditLimit: 60000,
+      photo: ''
     }
   ],
   receipts: [
@@ -315,6 +340,17 @@ function loadState() {
       const parsed = JSON.parse(raw);
       // Ensure activePage defaults to 'customers' as requested
       if (!parsed.activePage) parsed.activePage = 'customers';
+      // Normalize customers data for backwards compatibility
+      if (Array.isArray(parsed.customers)) {
+        parsed.customers = parsed.customers.map(c => ({
+          ...c,
+          shopName: c.shopName || '',
+          primaryNumber: c.primaryNumber || c.phone || '',
+          secondaryNumber: c.secondaryNumber || '',
+          gstNumber: c.gstNumber || c.gstin || '',
+          photo: c.photo || ''
+        }));
+      }
       return parsed;
     }
   } catch (e) {
@@ -486,11 +522,9 @@ function renderCustomersPage(container) {
           </div>
           <p class="text-sm text-slate-500 mt-1">Manage client ledgers, GSTIN details, and outstanding balances</p>
         </div>
-        <div class="flex items-center space-x-3">
-          <button onclick="openCustomerModal()" class="inline-flex items-center px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-sm text-sm font-medium transition cursor-pointer">
-            <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i>
-            Add Customer
-          </button>
+        <div class="flex items-center space-x-2 text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl self-start sm:self-auto font-medium">
+          <i data-lucide="info" class="w-3.5 h-3.5 text-sky-600 mr-1"></i>
+          <span>Use the <strong>+</strong> button at bottom-right to add customers</span>
         </div>
       </div>
 
@@ -533,7 +567,7 @@ function renderCustomersPage(container) {
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
         <div class="relative flex-1">
           <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"></i>
-          <input type="text" id="custSearchInput" oninput="filterCustomerTable()" placeholder="Search by customer name, phone, or GSTIN..." class="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+          <input type="text" id="custSearchInput" oninput="filterCustomerTable()" placeholder="Search by customer name, shop name, phone, or GSTIN..." class="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
         </div>
       </div>
 
@@ -543,42 +577,57 @@ function renderCustomersPage(container) {
           <table class="w-full text-left border-collapse" id="customersTable">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                <th class="py-3.5 px-4">Customer Details</th>
-                <th class="py-3.5 px-4">Contact</th>
-                <th class="py-3.5 px-4">GSTIN & Location</th>
+                <th class="py-3.5 px-4">Customer / Shop</th>
+                <th class="py-3.5 px-4">Contact Numbers</th>
+                <th class="py-3.5 px-4">GSTIN & Address</th>
                 <th class="py-3.5 px-4 text-right">Outstanding (Due)</th>
                 <th class="py-3.5 px-4 text-center">Quick Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-sm">
-              ${appState.customers.map(c => `
+              ${appState.customers.map(c => {
+                const displayName = c.shopName || c.name || 'Customer';
+                const subName = c.shopName && c.name ? c.name : '';
+                const primaryPhone = c.primaryNumber || c.phone || 'N/A';
+                const secondaryPhone = c.secondaryNumber || '';
+                const gst = c.gstNumber || c.gstin || 'Unregistered';
+                const avatar = c.photo
+                  ? `<img src="${c.photo}" alt="${displayName}" class="w-11 h-11 rounded-full object-cover border border-slate-200 shadow-xs shrink-0">`
+                  : `<div class="w-11 h-11 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">${displayName.charAt(0).toUpperCase()}</div>`;
+
+                return `
                 <tr class="hover:bg-slate-50/80 transition group">
                   <td class="py-4 px-4">
                     <div class="flex items-center space-x-3">
-                      <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-                        ${c.name.charAt(0).toUpperCase()}
-                      </div>
+                      ${avatar}
                       <div>
-                        <div class="font-semibold text-slate-900">${c.name}</div>
-                        <div class="text-xs text-slate-400 font-mono">ID: ${c.id}</div>
+                        <div class="font-bold text-slate-900">${displayName}</div>
+                        ${subName ? `<div class="text-xs text-slate-500 flex items-center mt-0.5"><i data-lucide="user" class="w-3 h-3 mr-1 text-slate-400"></i>${subName}</div>` : ''}
+                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">ID: ${c.id}</div>
                       </div>
                     </div>
                   </td>
                   <td class="py-4 px-4">
-                    <div class="text-slate-700 flex items-center text-xs">
-                      <i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0"></i>
-                      ${c.phone || 'N/A'}
+                    <div class="text-slate-800 font-medium flex items-center text-xs">
+                      <i data-lucide="phone" class="w-3.5 h-3.5 text-sky-600 mr-1.5 shrink-0"></i>
+                      <span>${primaryPhone}</span>
                     </div>
+                    ${secondaryPhone ? `
+                    <div class="text-slate-500 flex items-center text-[11px] mt-1 font-mono">
+                      <i data-lucide="phone-call" class="w-3 h-3 text-slate-400 mr-1.5 shrink-0"></i>
+                      <span>${secondaryPhone}</span>
+                    </div>` : ''}
+                    ${c.email ? `
                     <div class="text-slate-500 flex items-center text-xs mt-1">
                       <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0"></i>
-                      ${c.email || 'N/A'}
-                    </div>
+                      <span>${c.email}</span>
+                    </div>` : ''}
                   </td>
                   <td class="py-4 px-4">
-                    <div class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-xs font-medium">
-                      ${c.gstin || 'Unregistered'}
+                    <div class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-xs font-semibold">
+                      ${gst}
                     </div>
-                    <div class="text-xs text-slate-500 mt-1 truncate max-w-xs">${c.city || ''}, ${c.state || ''}</div>
+                    <div class="text-xs text-slate-500 mt-1 max-w-xs truncate">${c.address || 'Address not added'}</div>
                   </td>
                   <td class="py-4 px-4 text-right font-mono font-semibold">
                     <span class="${Number(c.balance) > 0 ? 'text-rose-600' : 'text-emerald-600'}">
@@ -602,11 +651,17 @@ function renderCustomersPage(container) {
                     </div>
                   </td>
                 </tr>
-              `).join('')}
+              `;
+              }).join('')}
             </tbody>
           </table>
         </div>
       </div>
+
+      <!-- Floating Action Button (FAB): Only plus mark, situated on lower right side, slight upper from down menu bar -->
+      <button onclick="openCustomerModal()" id="fabAddCustomer" class="fixed right-6 bottom-20 sm:bottom-22 z-30 w-14 h-14 bg-sky-600 hover:bg-sky-700 active:scale-95 text-white rounded-full shadow-xl shadow-sky-600/35 flex items-center justify-center transition-all cursor-pointer fab-btn focus:outline-none" title="Add Customer" aria-label="Add Customer">
+        <i data-lucide="plus" class="w-8 h-8 stroke-[2.5]"></i>
+      </button>
     </div>
   `;
 }
@@ -987,7 +1042,225 @@ function renderInputBillsPage(container) {
 // MODAL CONTROLLERS & ACTIONS
 // ==========================================
 
-// CUSTOMER MODAL
+// ==========================================
+// CUSTOMER PROFILE PHOTO & CONTACT HELPERS
+// ==========================================
+
+function openCustomerPhotoPicker() {
+  const sheet = document.getElementById('photoPickerSheet');
+  const backdrop = document.getElementById('photoPickerBackdrop');
+  if (sheet) sheet.classList.remove('hidden');
+  if (backdrop) backdrop.classList.remove('hidden');
+
+  const currentPhoto = document.getElementById('custPhotoInput')?.value;
+  const removeBtn = document.getElementById('removePhotoBtn');
+  if (removeBtn) {
+    if (currentPhoto) removeBtn.classList.remove('hidden');
+    else removeBtn.classList.add('hidden');
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeCustomerPhotoPicker() {
+  const sheet = document.getElementById('photoPickerSheet');
+  const backdrop = document.getElementById('photoPickerBackdrop');
+  if (sheet) sheet.classList.add('hidden');
+  if (backdrop) backdrop.classList.add('hidden');
+}
+
+function triggerCameraUpload() {
+  closeCustomerPhotoPicker();
+  const input = document.getElementById('cameraFileInput');
+  if (input) {
+    input.value = '';
+    input.click();
+  }
+}
+
+function triggerGalleryUpload() {
+  closeCustomerPhotoPicker();
+  const input = document.getElementById('galleryFileInput');
+  if (input) {
+    input.value = '';
+    input.click();
+  }
+}
+
+function handleCustomerPhotoSelected(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const rawDataUrl = e.target.result;
+    // Downscale image to max 400x400 to optimize memory & storage
+    resizeImage(rawDataUrl, 400, 400, function(resizedDataUrl) {
+      const photoInput = document.getElementById('custPhotoInput');
+      const preview = document.getElementById('custPhotoPreview');
+      const placeholder = document.getElementById('custPhotoPlaceholder');
+      if (photoInput) photoInput.value = resizedDataUrl;
+      if (preview && placeholder) {
+        preview.src = resizedDataUrl;
+        preview.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+      }
+      showToast('Profile photo attached');
+      closeCustomerPhotoPicker();
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function resizeImage(dataUrl, maxWidth, maxHeight, callback) {
+  const img = new Image();
+  img.onload = function() {
+    let width = img.width;
+    let height = img.height;
+    if (width > height) {
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+    } else {
+      if (height > maxHeight) {
+        width = Math.round((width * maxHeight) / height);
+        height = maxHeight;
+      }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+    callback(canvas.toDataURL('image/jpeg', 0.85));
+  };
+  img.src = dataUrl;
+}
+
+function removeCustomerPhoto() {
+  const photoInput = document.getElementById('custPhotoInput');
+  const preview = document.getElementById('custPhotoPreview');
+  const placeholder = document.getElementById('custPhotoPlaceholder');
+  if (photoInput) photoInput.value = '';
+  if (preview && placeholder) {
+    preview.src = '';
+    preview.classList.add('hidden');
+    placeholder.classList.remove('hidden');
+  }
+  document.getElementById('removePhotoBtn')?.classList.add('hidden');
+  closeCustomerPhotoPicker();
+  showToast('Photo removed');
+}
+
+// CONTACT PICKER HELPERS (Boxes 4 & 5)
+let currentContactTargetInput = 'custPrimaryNumber';
+
+async function handleContactPickerClick(targetInputId) {
+  currentContactTargetInput = targetInputId;
+
+  // Try Native Web Contact Picker API (available on Android mobile devices with Chrome)
+  if ('contacts' in navigator && 'ContactsManager' in window) {
+    try {
+      const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
+      if (contacts && contacts[0] && contacts[0].tel && contacts[0].tel.length > 0) {
+        const phone = contacts[0].tel[0].replace(/\s+/g, ' ').trim();
+        const inputEl = document.getElementById(targetInputId);
+        if (inputEl) inputEl.value = phone;
+        // If Name box is empty and contact has a name, also fill Name
+        const nameBox = document.getElementById('custName');
+        if (nameBox && !nameBox.value.trim() && contacts[0].name && contacts[0].name[0]) {
+          nameBox.value = contacts[0].name[0];
+        }
+        showToast(`Contact imported: ${phone}`);
+        return;
+      }
+    } catch (err) {
+      console.log('Native contact picker cancelled or unsupported:', err);
+    }
+  }
+
+  // Fallback: Open sleek Contact Chooser modal for choosing types or existing contacts
+  openContactChooserModal(targetInputId);
+}
+
+function openContactChooserModal(targetInputId) {
+  currentContactTargetInput = targetInputId;
+  const modal = document.getElementById('contactChooserModal');
+  const backdrop = document.getElementById('contactChooserBackdrop');
+  const list = document.getElementById('contactChooserList');
+  if (!modal) return;
+
+  const inputName = targetInputId === 'custPrimaryNumber' ? 'Primary Number' : 'Secondary Number';
+  const desc = document.getElementById('contactChooserDesc');
+  if (desc) desc.innerText = `Selecting for ${inputName}. Choose contact type or pick from existing directory:`;
+
+  if (list) {
+    if (appState.customers.length === 0) {
+      list.innerHTML = '<div class="text-xs text-slate-400 p-2 text-center">No saved contacts yet</div>';
+    } else {
+      list.innerHTML = appState.customers.map(c => {
+        const ph = c.primaryNumber || c.phone || '';
+        const title = c.shopName || c.name || 'Customer';
+        return `
+          <div onclick="selectExistingContactNumber('${ph}', '${(c.name || '').replace(/'/g, "\\'")}')" class="py-2 px-2 hover:bg-sky-50 rounded-xl flex items-center justify-between cursor-pointer group transition">
+            <div class="flex items-center space-x-2">
+              <div class="w-7 h-7 rounded-full bg-slate-100 group-hover:bg-sky-100 group-hover:text-sky-600 text-slate-600 flex items-center justify-center font-bold text-xs shrink-0">
+                ${title.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div class="text-xs font-semibold text-slate-800 group-hover:text-sky-600">${title}</div>
+                <div class="text-[11px] text-slate-400 font-mono">${ph || 'No number'}</div>
+              </div>
+            </div>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-300 group-hover:text-sky-600"></i>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  modal.classList.remove('hidden');
+  if (backdrop) backdrop.classList.remove('hidden');
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeContactChooserModal() {
+  const modal = document.getElementById('contactChooserModal');
+  const backdrop = document.getElementById('contactChooserBackdrop');
+  if (modal) modal.classList.add('hidden');
+  if (backdrop) backdrop.classList.add('hidden');
+}
+
+function setContactTypeLabel(type) {
+  const target = document.getElementById(currentContactTargetInput);
+  if (target) {
+    const rawVal = target.value.replace(/\s*\([A-Za-z /]+\)/g, '').trim();
+    target.value = rawVal ? `${rawVal} (${type})` : `(${type}) `;
+    target.focus();
+    showToast(`Contact type set to: ${type}`);
+  }
+  closeContactChooserModal();
+}
+
+function selectExistingContactNumber(phone, name) {
+  if (!phone) {
+    showToast('No phone number on selected contact', 'error');
+    return;
+  }
+  const target = document.getElementById(currentContactTargetInput);
+  if (target) target.value = phone;
+  const nameBox = document.getElementById('custName');
+  if (nameBox && !nameBox.value.trim() && name) {
+    nameBox.value = name;
+  }
+  closeContactChooserModal();
+  showToast(`Selected: ${phone}`);
+}
+
+// ==========================================
+// CUSTOMER MODAL (7 BOXES + PROFILE PHOTO)
+// ==========================================
+
 function openCustomerModal(id = null) {
   const modal = document.getElementById('customerModal');
   const form = document.getElementById('customerForm');
@@ -996,26 +1269,48 @@ function openCustomerModal(id = null) {
 
   const titleEl = document.getElementById('customerModalTitle');
   const custIdInput = document.getElementById('custIdInput');
+  const photoInput = document.getElementById('custPhotoInput');
+  const preview = document.getElementById('custPhotoPreview');
+  const placeholder = document.getElementById('custPhotoPlaceholder');
+  const removePhotoBtn = document.getElementById('removePhotoBtn');
+
+  // Reset photo state
+  if (photoInput) photoInput.value = '';
+  if (preview) {
+    preview.src = '';
+    preview.classList.add('hidden');
+  }
+  if (placeholder) placeholder.classList.remove('hidden');
+  if (removePhotoBtn) removePhotoBtn.classList.add('hidden');
 
   if (id) {
     const cust = appState.customers.find(c => c.id === id);
     if (cust) {
       titleEl.innerText = 'Edit Customer';
       custIdInput.value = cust.id;
+      // 7 Boxes
       document.getElementById('custName').value = cust.name || '';
-      document.getElementById('custPhone').value = cust.phone || '';
-      document.getElementById('custEmail').value = cust.email || '';
-      document.getElementById('custGstin').value = cust.gstin || '';
+      document.getElementById('custShopName').value = cust.shopName || '';
       document.getElementById('custAddress').value = cust.address || '';
-      document.getElementById('custCity').value = cust.city || '';
-      document.getElementById('custState').value = cust.state || 'Karnataka (29)';
-      document.getElementById('custBalance').value = cust.balance || 0;
+      document.getElementById('custPrimaryNumber').value = cust.primaryNumber || cust.phone || '';
+      document.getElementById('custSecondaryNumber').value = cust.secondaryNumber || '';
+      document.getElementById('custEmail').value = cust.email || '';
+      document.getElementById('custGstNumber').value = cust.gstNumber || cust.gstin || '';
+      
+      // Photo preview
+      if (cust.photo) {
+        if (photoInput) photoInput.value = cust.photo;
+        if (preview) {
+          preview.src = cust.photo;
+          preview.classList.remove('hidden');
+        }
+        if (placeholder) placeholder.classList.add('hidden');
+        if (removePhotoBtn) removePhotoBtn.classList.remove('hidden');
+      }
     }
   } else {
-    titleEl.innerText = 'Add New Customer';
+    titleEl.innerText = 'Add Customer';
     custIdInput.value = '';
-    document.getElementById('custBalance').value = 0;
-    document.getElementById('custState').value = 'Karnataka (29)';
   }
 
   modal.classList.remove('hidden');
@@ -1030,43 +1325,62 @@ function closeCustomerModal() {
 function handleCustomerSubmit(e) {
   e.preventDefault();
   const id = document.getElementById('custIdInput').value;
+  const photo = document.getElementById('custPhotoInput')?.value || '';
+  
+  // 7 Boxes
   const name = document.getElementById('custName').value.trim();
-  const phone = document.getElementById('custPhone').value.trim();
-  const email = document.getElementById('custEmail').value.trim();
-  const gstin = document.getElementById('custGstin').value.trim().toUpperCase();
+  const shopName = document.getElementById('custShopName').value.trim();
   const address = document.getElementById('custAddress').value.trim();
-  const city = document.getElementById('custCity').value.trim();
-  const state = document.getElementById('custState').value.trim();
-  const balance = parseFloat(document.getElementById('custBalance').value) || 0;
+  const primaryNumber = document.getElementById('custPrimaryNumber').value.trim();
+  const secondaryNumber = document.getElementById('custSecondaryNumber').value.trim();
+  const email = document.getElementById('custEmail').value.trim();
+  const gstNumber = document.getElementById('custGstNumber').value.trim().toUpperCase();
 
-  if (!name) {
-    showToast('Customer name is required', 'error');
+  if (!name && !shopName) {
+    showToast('Please enter Name or Shop Name', 'error');
     return;
   }
+
+  const finalName = name || shopName;
 
   if (id) {
     // Edit existing
     const idx = appState.customers.findIndex(c => c.id === id);
     if (idx !== -1) {
-      appState.customers[idx] = { ...appState.customers[idx], name, phone, email, gstin, address, city, state, balance };
-      showToast('Customer updated successfully');
+      appState.customers[idx] = {
+        ...appState.customers[idx],
+        name: finalName,
+        shopName,
+        address,
+        primaryNumber,
+        secondaryNumber,
+        phone: primaryNumber || appState.customers[idx].phone,
+        email,
+        gstNumber,
+        gstin: gstNumber,
+        photo
+      };
+      showToast('Customer profile updated successfully');
     }
   } else {
     // Add new
     const newCust = {
       id: 'cust-' + Date.now(),
-      name,
-      phone,
-      email,
-      gstin,
+      name: finalName,
+      shopName,
       address,
-      city,
-      state,
-      balance,
-      creditLimit: 50000
+      primaryNumber,
+      secondaryNumber,
+      phone: primaryNumber,
+      email,
+      gstNumber,
+      gstin: gstNumber,
+      balance: 0,
+      creditLimit: 50000,
+      photo
     };
     appState.customers.unshift(newCust);
-    showToast('New customer added successfully');
+    showToast('Customer saved successfully!');
   }
 
   saveState();
@@ -1092,7 +1406,10 @@ function openReceiptModal(presetCustId = null) {
   // Populate customer dropdown
   const custSelect = document.getElementById('receiptCustomerSelect');
   custSelect.innerHTML = '<option value="">-- Select Customer --</option>' +
-    appState.customers.map(c => `<option value="${c.id}" ${presetCustId === c.id ? 'selected' : ''}>${c.name} (Due: ${formatINR(c.balance)})</option>`).join('');
+    appState.customers.map(c => {
+      const label = c.shopName ? `${c.shopName} (${c.name})` : c.name;
+      return `<option value="${c.id}" ${presetCustId === c.id ? 'selected' : ''}>${label} (Due: ${formatINR(c.balance)})</option>`;
+    }).join('');
 
   document.getElementById('receiptDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('receiptNo').value = 'RCP-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
@@ -1172,7 +1489,10 @@ function openGstBillModal(presetCustId = null) {
 
   const custSelect = document.getElementById('invCustomerSelect');
   custSelect.innerHTML = '<option value="">-- Select Customer --</option>' +
-    appState.customers.map(c => `<option value="${c.id}" ${presetCustId === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
+    appState.customers.map(c => {
+      const label = c.shopName ? `${c.shopName} (${c.name})` : c.name;
+      return `<option value="${c.id}" ${presetCustId === c.id ? 'selected' : ''}>${label}</option>`;
+    }).join('');
 
   document.getElementById('invNumber').value = 'MAK-26-' + Math.floor(1000 + Math.random() * 9000);
   document.getElementById('invDate').value = new Date().toISOString().split('T')[0];
