@@ -2,34 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
   <title>MAKOIL Billing & Invoicing System</title>
   <meta name="description" content="GST Billing, Receipts, Customer Ledgers, and Input ITC Management for MAKOIL">
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Fonts (non-blocking) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+  <!-- Pre-built Tailwind CSS (no runtime CDN, so no unstyled flash on mobile) -->
+  <link rel="stylesheet" href="tailwind.css">
   <!-- Custom Styles -->
   <link rel="stylesheet" href="styles.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0f9ff',
-              100: '#e0f2fe',
-              500: '#0ea5e9',
-              600: '#0284c7',
-              700: '#0369a1',
-              800: '#075985',
-              900: '#0c4a6e'
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <!-- Lucide Icons (self-hosted) -->
+  <script src="lucide.min.js"></script>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 pb-28 md:pb-24">
 
@@ -238,7 +227,7 @@
       </div>
 
       <!-- Customer Form -->
-      <form id="customerForm" onsubmit="handleCustomerSubmit(event)" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+      <form id="customerForm" onsubmit="handleCustomerSubmit(event)" class="p-5 sm:p-6 space-y-4 max-h-[80vh] max-h-[80dvh] overflow-y-auto">
         <input type="hidden" id="custIdInput">
         <input type="hidden" id="custPhotoInput">
 
@@ -579,7 +568,7 @@
             </button>
           </div>
           <div class="overflow-x-auto">
-            <table class="w-full text-left">
+            <table class="w-full text-left items-table">
               <thead>
                 <tr class="text-[11px] font-semibold text-slate-500 uppercase">
                   <th>Product / Service</th>

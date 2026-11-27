@@ -1,10 +1,17 @@
 /* MAKOIL Billing & Invoicing Custom Styles */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+/* (Fonts are loaded via <link> in index.html to avoid render-blocking @import) */
 
 :root {
   --primary: #0284c7;
   --primary-dark: #0369a1;
   --accent: #f59e0b;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -12,6 +19,13 @@ body {
   background-color: #f8fafc;
   color: #0f172a;
   -webkit-tap-highlight-color: transparent;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+button, a, select, input, textarea, label {
+  touch-action: manipulation;
 }
 
 .font-mono {
@@ -42,21 +56,24 @@ body {
   box-shadow: 0 -4px 20px -2px rgba(0, 0, 0, 0.08), 0 -2px 6px -1px rgba(0, 0, 0, 0.04);
 }
 
-/* Floating 3-dot bottom menu sheet */
+/* Floating 3-dot bottom menu sheet (centered with translateX(-50%)) */
 .menu-sheet {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: bottom center;
+  bottom: calc(5rem + var(--safe-bottom));
+  max-height: calc(100dvh - 7rem);
+  overflow-y: auto;
 }
 
 .menu-sheet.hidden {
   opacity: 0;
-  transform: translateY(16px) scale(0.96);
+  transform: translate(-50%, 16px) scale(0.96);
   pointer-events: none;
 }
 
 .menu-sheet:not(.hidden) {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translate(-50%, 0) scale(1);
   pointer-events: auto;
 }
 
@@ -75,14 +92,19 @@ body {
   -webkit-backdrop-filter: blur(4px);
 }
 
-/* Floating Action Button (FAB) */
+/* Floating Action Button (FAB): lower right, slightly above the bottom menu bar */
 .fab-btn {
+  position: fixed;
+  right: 1.25rem;
+  bottom: calc(5.5rem + var(--safe-bottom));
   box-shadow: 0 10px 25px -3px rgba(2, 132, 199, 0.45), 0 4px 6px -2px rgba(2, 132, 199, 0.2);
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
 }
-.fab-btn:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 14px 28px -2px rgba(2, 132, 199, 0.5), 0 6px 10px -2px rgba(2, 132, 199, 0.25);
+@media (hover: hover) {
+  .fab-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 14px 28px -2px rgba(2, 132, 199, 0.5), 0 6px 10px -2px rgba(2, 132, 199, 0.25);
+  }
 }
 .fab-btn:active {
   transform: translateY(1px) scale(0.96);
@@ -90,7 +112,10 @@ body {
 
 /* Bottom popup sheet for photo & contact pickers */
 .bottom-sheet-popup {
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  bottom: calc(1.5rem + var(--safe-bottom));
+  max-height: calc(100dvh - 3rem);
+  overflow-y: auto;
 }
 .bottom-sheet-popup.hidden {
   opacity: 0;
@@ -148,4 +173,200 @@ body {
   #printArea {
     display: none;
   }
+}
+
+
+/* ==========================================================
+   MOBILE / TOUCH OPTIMISATIONS (same look, phone friendly)
+   ========================================================== */
+
+/* Bottom dock respects phone gesture bar / notch */
+.bottom-dock {
+  padding-bottom: calc(0.5rem + var(--safe-bottom));
+}
+body {
+  padding-bottom: calc(7rem + var(--safe-bottom));
+}
+header {
+  padding-top: var(--safe-top);
+}
+
+/* Toasts: full width at the top on phones */
+@media (max-width: 639px) {
+  #toastContainer {
+    left: 0.75rem;
+    right: 0.75rem;
+    top: calc(0.75rem + var(--safe-top));
+    align-items: stretch;
+  }
+
+  /* 16px inputs stop iOS Safari zooming/jumping the page when a field is focused */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  main#mainContent {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  /* Page title a little smaller so it never wraps awkwardly */
+  main h1 {
+    font-size: 1.35rem;
+    line-height: 1.75rem;
+  }
+
+  /* Metric cards: tighter on phones */
+  main .grid > .p-5 {
+    padding: 0.9rem 1rem;
+  }
+
+  /* ---------- Tables -> cards (no sideways scrolling) ---------- */
+  .overflow-x-auto {
+    overflow-x: visible;
+  }
+  table.responsive-table,
+  table.responsive-table tbody,
+  table.responsive-table tr,
+  table.responsive-table td {
+    display: block;
+    width: 100%;
+  }
+  table.responsive-table thead {
+    display: none;
+  }
+  table.responsive-table tr {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  table.responsive-table tr:last-child {
+    border-bottom: 0;
+  }
+  table.responsive-table td {
+    padding: 0.3rem 0 !important;
+    text-align: left !important;
+    max-width: none;
+  }
+  table.responsive-table td[data-label]:not(:first-child):not(:last-child)::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 0.2rem;
+  }
+  table.responsive-table td:last-child > div,
+  table.responsive-table td:last-child > button {
+    justify-content: flex-start !important;
+  }
+  table.responsive-table td:last-child {
+    padding-top: 0.6rem !important;
+    margin-top: 0.3rem;
+    border-top: 1px dashed #e2e8f0;
+  }
+  table.responsive-table td:last-child button {
+    padding: 0.6rem;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+  }
+  table.responsive-table .truncate {
+    white-space: normal;
+    max-width: none;
+  }
+
+  /* ---------- GST bill line-item editor ---------- */
+  table.items-table,
+  table.items-table tbody,
+  table.items-table tr,
+  table.items-table td {
+    display: block;
+    width: 100%;
+  }
+  table.items-table thead {
+    display: none;
+  }
+  table.items-table tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed #cbd5e1;
+  }
+  table.items-table td {
+    width: auto !important;
+    padding: 0 !important;
+    min-width: 0;
+  }
+  table.items-table td:first-child {
+    grid-column: 1 / -1;
+  }
+  table.items-table td:not(:first-child):not(:last-child)::before {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 0.15rem;
+  }
+  table.items-table td:nth-child(2)::before { content: 'HSN'; }
+  table.items-table td:nth-child(3)::before { content: 'Qty'; }
+  table.items-table td:nth-child(4)::before { content: 'Unit'; }
+  table.items-table td:nth-child(5)::before { content: 'Rate (\20B9)'; }
+  table.items-table td:nth-child(6)::before { content: 'GST'; }
+  table.items-table td:last-child {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+  }
+  table.items-table td input,
+  table.items-table td select {
+    padding: 0.55rem 0.6rem !important;
+  }
+
+  /* Bigger tap targets for dock buttons */
+  .bottom-dock button {
+    min-height: 48px;
+  }
+
+  /* Modals: use almost the full screen width, keep inner scroll smooth */
+  #customerModal > div,
+  #receiptModal > div,
+  #inputBillModal > div,
+  #gstBillModal > div {
+    border-radius: 1.5rem;
+  }
+}
+
+/* Modals taller than the screen: auto margins keep them centered when they fit
+   and let them scroll from the very top (header never gets cut off) when they don't */
+#customerModal > div,
+#receiptModal > div,
+#inputBillModal > div,
+#gstBillModal > div {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+/* Smooth momentum scrolling inside modals / sheets on iOS */
+#customerForm,
+#contactChooserList,
+.menu-sheet,
+.bottom-sheet-popup {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+#customerModal,
+#receiptModal,
+#inputBillModal,
+#gstBillModal {
+  overscroll-behavior: contain;
+}
+
+/* Landscape phones: keep the dock compact */
+@media (max-height: 480px) and (orientation: landscape) {
+  .bottom-dock { padding-top: 0.15rem; }
+  .fab-btn { bottom: calc(4.5rem + var(--safe-bottom)); }
 }

@@ -499,7 +499,22 @@ function renderCurrentPage() {
       renderCustomersPage(container);
   }
 
+  makeTablesResponsive(container);
   if (window.lucide) lucide.createIcons();
+}
+
+// Tag every table cell with its column header so tables can collapse into
+// readable cards on small (mobile) screens - see styles.css (.responsive-table)
+function makeTablesResponsive(root) {
+  root.querySelectorAll('table').forEach(table => {
+    table.classList.add('responsive-table');
+    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+    table.querySelectorAll('tbody tr').forEach(tr => {
+      Array.from(tr.children).forEach((td, i) => {
+        if (headers[i]) td.setAttribute('data-label', headers[i]);
+      });
+    });
+  });
 }
 
 // ==========================================
