@@ -3,8 +3,8 @@
 A modern, fast, and responsive billing web application tailored for lubricants, industrial oils, and automotive distribution ledgers.
 
 ## 🚀 Live Demo
-- **Vercel Deployment Link**: [https://instant-koto-jx3x1nx.tmp.now](https://instant-koto-jx3x1nx.tmp.now)
-- **Vercel Claim Link**: [Claim this deployment to your Vercel account](https://vercel.com/claim-deployment?code=ebc8d4bc-7405-4192-8f62-35ae5cac4c28)
+- **Vercel Deployment Link**: [https://zippy-orion-blo6m24.tmp.now](https://zippy-orion-blo6m24.tmp.now)
+- **Vercel Claim Link**: [Claim this deployment to your Vercel account](https://vercel.com/claim-deployment?code=8331e6bd-ee63-4ae7-9b78-fabbb5a80973)
 - **GitHub Repository**: [sumanthlhegde23-cmyk/MAKOIL](https://github.com/sumanthlhegde23-cmyk/MAKOIL)
 
 ---
