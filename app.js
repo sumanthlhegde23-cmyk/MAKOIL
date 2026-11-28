@@ -522,158 +522,82 @@ function makeTablesResponsive(root) {
 // ==========================================
 function renderCustomersPage(container) {
   const totalReceivables = appState.customers.reduce((acc, c) => acc + (Number(c.balance) || 0), 0);
-  const totalCustomers = appState.customers.length;
+  // Count only customers who still owe money
+  const pendingCustomers = appState.customers.filter(c => (Number(c.balance) || 0) > 0).length;
+
+  // Customers with the highest dues first
+  const sorted = [...appState.customers].sort((a, b) => (Number(b.balance) || 0) - (Number(a.balance) || 0));
 
   container.innerHTML = `
-    <div class="space-y-6">
-      <!-- Header Banner & Stats -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div class="flex items-center space-x-2">
-            <span class="inline-flex items-center justify-center p-2 bg-sky-100 text-sky-700 rounded-lg">
-              <i data-lucide="users" class="w-5 h-5"></i>
-            </span>
-            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Customers Directory</h1>
-          </div>
-          <p class="text-sm text-slate-500 mt-1">Manage client ledgers, GSTIN details, and outstanding balances</p>
+    <div class="cd-page">
+      <!-- Header: title, compact stat chips, search toggle -->
+      <div class="cd-header">
+        <div class="cd-title-wrap">
+          <span class="cd-title-icon"><i data-lucide="users" class="w-5 h-5"></i></span>
+          <h1 class="cd-title">Customers</h1>
         </div>
-        <div class="flex items-center space-x-2 text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl self-start sm:self-auto font-medium">
-          <i data-lucide="info" class="w-3.5 h-3.5 text-sky-600 mr-1"></i>
-          <span>Use the <strong>+</strong> button at bottom-right to add customers</span>
+        <button type="button" id="custSearchToggle" onclick="toggleCustomerSearch()" class="cd-search-btn" title="Search" aria-label="Search customers">
+          <i data-lucide="search" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="custSearchWrap" class="cd-search-wrap">
+        <i data-lucide="search" class="cd-search-icon w-4 h-4"></i>
+        <input type="text" id="custSearchInput" oninput="filterCustomerTable()" placeholder="Search name, phone or GSTIN..." class="cd-search-input" autocomplete="off">
+        <button type="button" onclick="toggleCustomerSearch(false)" class="cd-search-close" aria-label="Close search">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="cd-stats">
+        <div class="cd-chip cd-chip-blue" title="Customers with pending balance">
+          <span class="cd-chip-icon"><i data-lucide="user-round" class="w-3.5 h-3.5"></i></span>
+          <span class="cd-chip-value">${pendingCustomers}</span>
+          <span class="cd-chip-label">Due</span>
+        </div>
+        <div class="cd-chip cd-chip-red" title="Total pending amount">
+          <span class="cd-chip-icon"><i data-lucide="indian-rupee" class="w-3.5 h-3.5"></i></span>
+          <span class="cd-chip-value font-mono">${formatINR(totalReceivables)}</span>
         </div>
       </div>
 
-      <!-- Quick Metrics Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Customers</p>
-            <p class="text-2xl font-bold text-slate-800 mt-1">${totalCustomers}</p>
-          </div>
-          <div class="w-12 h-12 bg-sky-50 text-sky-600 rounded-xl flex items-center justify-center">
-            <i data-lucide="contact-2" class="w-6 h-6"></i>
-          </div>
-        </div>
+      <!-- Customer list: name + pending amount; tap a row for actions -->
+      <div class="cd-list" id="customersList">
+        ${sorted.length === 0 ? `
+          <div class="cd-empty">
+            <i data-lucide="user-plus" class="w-8 h-8"></i>
+            <p>No customers yet</p>
+          </div>` : sorted.map(c => {
+          const displayName = c.shopName || c.name || 'Customer';
+          const balance = Number(c.balance) || 0;
+          const searchText = [displayName, c.name, c.primaryNumber, c.phone, c.secondaryNumber, c.gstNumber, c.gstin, c.address]
+            .filter(Boolean).join(' ').toLowerCase().replace(/"/g, '');
+          const avatar = c.photo
+            ? `<img src="${c.photo}" alt="" class="cd-avatar cd-avatar-img">`
+            : `<div class="cd-avatar">${displayName.charAt(0).toUpperCase()}</div>`;
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Outstanding Balance</p>
-            <p class="text-2xl font-bold text-rose-600 mt-1 font-mono">${formatINR(totalReceivables)}</p>
-          </div>
-          <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center">
-            <i data-lucide="alert-circle" class="w-6 h-6"></i>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Default View</p>
-            <p class="text-sm font-semibold text-emerald-600 mt-1 flex items-center">
-              <i data-lucide="check-circle-2" class="w-4 h-4 mr-1"></i> Default Active Tab
-            </p>
-          </div>
-          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
-            <i data-lucide="sparkles" class="w-6 h-6"></i>
-          </div>
-        </div>
-      </div>
-
-      <!-- Search & Filter Bar -->
-      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
-        <div class="relative flex-1">
-          <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"></i>
-          <input type="text" id="custSearchInput" oninput="filterCustomerTable()" placeholder="Search by customer name, shop name, phone, or GSTIN..." class="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+          return `
+          <div class="cd-item" data-search="${searchText}">
+            <button type="button" class="cd-row" onclick="toggleCustomerActions(this)">
+              ${avatar}
+              <span class="cd-name">${displayName}</span>
+              <span class="cd-amount font-mono">${formatINR(balance)}</span>
+            </button>
+            <div class="cd-actions">
+              <button onclick="quickInvoiceForCustomer('${c.id}')" class="cd-act cd-act-blue"><i data-lucide="file-text" class="w-4 h-4"></i><span>Bill</span></button>
+              <button onclick="quickReceiptForCustomer('${c.id}')" class="cd-act cd-act-green"><i data-lucide="receipt" class="w-4 h-4"></i><span>Receipt</span></button>
+              <button onclick="openCustomerModal('${c.id}')" class="cd-act cd-act-indigo"><i data-lucide="pencil" class="w-4 h-4"></i><span>Edit</span></button>
+              <button onclick="deleteCustomer('${c.id}')" class="cd-act cd-act-red"><i data-lucide="trash-2" class="w-4 h-4"></i><span>Delete</span></button>
+            </div>
+          </div>`;
+        }).join('')}
+        <div class="cd-empty cd-no-match hidden" id="custNoMatch">
+          <i data-lucide="search-x" class="w-7 h-7"></i>
+          <p>No matching customers</p>
         </div>
       </div>
 
-      <!-- Customers Table -->
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse" id="customersTable">
-            <thead>
-              <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                <th class="py-3.5 px-4">Customer / Shop</th>
-                <th class="py-3.5 px-4">Contact Numbers</th>
-                <th class="py-3.5 px-4">GSTIN & Address</th>
-                <th class="py-3.5 px-4 text-right">Outstanding (Due)</th>
-                <th class="py-3.5 px-4 text-center">Quick Actions</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 text-sm">
-              ${appState.customers.map(c => {
-                const displayName = c.shopName || c.name || 'Customer';
-                const subName = c.shopName && c.name ? c.name : '';
-                const primaryPhone = c.primaryNumber || c.phone || 'N/A';
-                const secondaryPhone = c.secondaryNumber || '';
-                const gst = c.gstNumber || c.gstin || 'Unregistered';
-                const avatar = c.photo
-                  ? `<img src="${c.photo}" alt="${displayName}" class="w-11 h-11 rounded-full object-cover border border-slate-200 shadow-xs shrink-0">`
-                  : `<div class="w-11 h-11 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">${displayName.charAt(0).toUpperCase()}</div>`;
-
-                return `
-                <tr class="hover:bg-slate-50/80 transition group">
-                  <td class="py-4 px-4">
-                    <div class="flex items-center space-x-3">
-                      ${avatar}
-                      <div>
-                        <div class="font-bold text-slate-900">${displayName}</div>
-                        ${subName ? `<div class="text-xs text-slate-500 flex items-center mt-0.5"><i data-lucide="user" class="w-3 h-3 mr-1 text-slate-400"></i>${subName}</div>` : ''}
-                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">ID: ${c.id}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="py-4 px-4">
-                    <div class="text-slate-800 font-medium flex items-center text-xs">
-                      <i data-lucide="phone" class="w-3.5 h-3.5 text-sky-600 mr-1.5 shrink-0"></i>
-                      <span>${primaryPhone}</span>
-                    </div>
-                    ${secondaryPhone ? `
-                    <div class="text-slate-500 flex items-center text-[11px] mt-1 font-mono">
-                      <i data-lucide="phone-call" class="w-3 h-3 text-slate-400 mr-1.5 shrink-0"></i>
-                      <span>${secondaryPhone}</span>
-                    </div>` : ''}
-                    ${c.email ? `
-                    <div class="text-slate-500 flex items-center text-xs mt-1">
-                      <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0"></i>
-                      <span>${c.email}</span>
-                    </div>` : ''}
-                  </td>
-                  <td class="py-4 px-4">
-                    <div class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-xs font-semibold">
-                      ${gst}
-                    </div>
-                    <div class="text-xs text-slate-500 mt-1 max-w-xs truncate">${c.address || 'Address not added'}</div>
-                  </td>
-                  <td class="py-4 px-4 text-right font-mono font-semibold">
-                    <span class="${Number(c.balance) > 0 ? 'text-rose-600' : 'text-emerald-600'}">
-                      ${formatINR(c.balance)}
-                    </span>
-                  </td>
-                  <td class="py-4 px-4 text-center">
-                    <div class="flex items-center justify-center space-x-1">
-                      <button onclick="quickInvoiceForCustomer('${c.id}')" title="Generate GST Bill" class="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition cursor-pointer">
-                        <i data-lucide="file-text" class="w-4 h-4"></i>
-                      </button>
-                      <button onclick="quickReceiptForCustomer('${c.id}')" title="Record Receipt" class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition cursor-pointer">
-                        <i data-lucide="receipt" class="w-4 h-4"></i>
-                      </button>
-                      <button onclick="openCustomerModal('${c.id}')" title="Edit Customer" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer">
-                        <i data-lucide="pencil" class="w-4 h-4"></i>
-                      </button>
-                      <button onclick="deleteCustomer('${c.id}')" title="Delete" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              `;
-              }).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Floating Action Button (FAB): Only plus mark, situated on lower right side, slight upper from down menu bar -->
+      <!-- Floating Action Button (FAB) -->
       <button onclick="openCustomerModal()" id="fabAddCustomer" class="fixed right-6 bottom-20 sm:bottom-22 z-30 w-14 h-14 bg-sky-600 hover:bg-sky-700 active:scale-95 text-white rounded-full shadow-xl shadow-sky-600/35 flex items-center justify-center transition-all cursor-pointer fab-btn focus:outline-none" title="Add Customer" aria-label="Add Customer">
         <i data-lucide="plus" class="w-8 h-8 stroke-[2.5]"></i>
       </button>
@@ -681,13 +605,41 @@ function renderCustomersPage(container) {
   `;
 }
 
+function toggleCustomerSearch(force) {
+  const wrap = document.getElementById('custSearchWrap');
+  const input = document.getElementById('custSearchInput');
+  const btn = document.getElementById('custSearchToggle');
+  if (!wrap || !input) return;
+  const open = typeof force === 'boolean' ? force : !wrap.classList.contains('open');
+  wrap.classList.toggle('open', open);
+  if (btn) btn.classList.toggle('active', open);
+  if (open) {
+    setTimeout(() => input.focus(), 50);
+  } else {
+    input.value = '';
+    filterCustomerTable();
+  }
+}
+
+function toggleCustomerActions(rowBtn) {
+  const item = rowBtn.closest('.cd-item');
+  if (!item) return;
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('#customersList .cd-item.open').forEach(el => el.classList.remove('open'));
+  if (!wasOpen) item.classList.add('open');
+}
+
 function filterCustomerTable() {
-  const query = (document.getElementById('custSearchInput')?.value || '').toLowerCase();
-  const rows = document.querySelectorAll('#customersTable tbody tr');
-  rows.forEach(r => {
-    const text = r.innerText.toLowerCase();
-    r.style.display = text.includes(query) ? '' : 'none';
+  const query = (document.getElementById('custSearchInput')?.value || '').toLowerCase().trim();
+  const items = document.querySelectorAll('#customersList .cd-item');
+  let shown = 0;
+  items.forEach(it => {
+    const match = !query || (it.dataset.search || '').includes(query);
+    it.style.display = match ? '' : 'none';
+    if (match) shown++;
   });
+  const noMatch = document.getElementById('custNoMatch');
+  if (noMatch) noMatch.classList.toggle('hidden', !(items.length && shown === 0));
 }
 
 // ==========================================
