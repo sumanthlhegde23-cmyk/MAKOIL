@@ -525,8 +525,8 @@ function renderCustomersPage(container) {
   // Count only customers who still owe money
   const pendingCustomers = appState.customers.filter(c => (Number(c.balance) || 0) > 0).length;
 
-  // Customers with the highest dues first
-  const sorted = [...appState.customers].sort((a, b) => (Number(b.balance) || 0) - (Number(a.balance) || 0));
+  const sortMode = appState.customerSort === 'recent' ? 'recent' : 'pending';
+  const sorted = getSortedCustomers(sortMode);
 
   container.innerHTML = `
     <div class="cd-page">
@@ -536,9 +536,28 @@ function renderCustomersPage(container) {
           <span class="cd-title-icon"><i data-lucide="users" class="w-5 h-5"></i></span>
           <h1 class="cd-title">Customers</h1>
         </div>
-        <button type="button" id="custSearchToggle" onclick="toggleCustomerSearch()" class="cd-search-btn" title="Search" aria-label="Search customers">
-          <i data-lucide="search" class="w-5 h-5"></i>
-        </button>
+        <div class="cd-header-actions">
+          <button type="button" id="custSearchToggle" onclick="toggleCustomerSearch()" class="cd-search-btn" title="Search" aria-label="Search customers">
+            <i data-lucide="search" class="w-5 h-5"></i>
+          </button>
+          <div class="cd-sort-wrap">
+            <button type="button" id="custSortToggle" onclick="toggleCustomerSortMenu(event)" class="cd-search-btn" title="Sort" aria-label="Sort options" aria-haspopup="true">
+              <i data-lucide="more-vertical" class="w-5 h-5"></i>
+            </button>
+            <div id="custSortMenu" class="cd-sort-menu" role="menu">
+              <button type="button" role="menuitem" onclick="setCustomerSort('recent')" class="cd-sort-item ${sortMode === 'recent' ? 'selected' : ''}">
+                <i data-lucide="clock" class="w-4 h-4"></i>
+                <span>Sort by recent</span>
+                <i data-lucide="check" class="cd-sort-check w-4 h-4"></i>
+              </button>
+              <button type="button" role="menuitem" onclick="setCustomerSort('pending')" class="cd-sort-item ${sortMode === 'pending' ? 'selected' : ''}">
+                <i data-lucide="indian-rupee" class="w-4 h-4"></i>
+                <span>Sort by pending amount</span>
+                <i data-lucide="check" class="cd-sort-check w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="custSearchWrap" class="cd-search-wrap">
@@ -604,6 +623,67 @@ function renderCustomersPage(container) {
     </div>
   `;
 }
+
+// Latest activity timestamp for a customer: creation time, last bill or last receipt
+function getCustomerLastActivity(c) {
+  const toTime = v => {
+    if (!v) return 0;
+    const t = new Date(v).getTime();
+    return isNaN(t) ? 0 : t;
+  };
+  const idTime = id => {
+    const m = String(id || '').match(/-(\d{12,})$/);
+    return m ? Number(m[1]) : 0;
+  };
+  let latest = Math.max(toTime(c.createdAt), idTime(c.id));
+  (appState.gstBills || []).forEach(b => {
+    if (b.customerId === c.id) latest = Math.max(latest, toTime(b.date), idTime(b.id));
+  });
+  (appState.receipts || []).forEach(r => {
+    if (r.customerId === c.id) latest = Math.max(latest, toTime(r.date), idTime(r.id));
+  });
+  return latest;
+}
+
+function getSortedCustomers(mode) {
+  const list = appState.customers.map((c, i) => ({ c, i }));
+  if (mode === 'recent') {
+    list.forEach(x => { x.t = getCustomerLastActivity(x.c); });
+    list.sort((a, b) => (b.t - a.t) || (a.i - b.i));
+  } else {
+    list.sort((a, b) => ((Number(b.c.balance) || 0) - (Number(a.c.balance) || 0)) || (a.i - b.i));
+  }
+  return list.map(x => x.c);
+}
+
+function toggleCustomerSortMenu(e, force) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('custSortMenu');
+  const btn = document.getElementById('custSortToggle');
+  if (!menu) return;
+  const open = typeof force === 'boolean' ? force : !menu.classList.contains('open');
+  menu.classList.toggle('open', open);
+  if (btn) btn.classList.toggle('active', open);
+}
+
+function setCustomerSort(mode) {
+  appState.customerSort = mode === 'recent' ? 'recent' : 'pending';
+  const query = document.getElementById('custSearchInput')?.value || '';
+  const searchOpen = document.getElementById('custSearchWrap')?.classList.contains('open');
+  if (typeof saveState === 'function') saveState();
+  renderCurrentPage();
+  if (searchOpen) {
+    toggleCustomerSearch(true);
+    const input = document.getElementById('custSearchInput');
+    if (input) { input.value = query; filterCustomerTable(); }
+  }
+  showToast(mode === 'recent' ? 'Sorted by recent' : 'Sorted by pending amount');
+}
+
+// Close the sort menu when tapping anywhere else
+document.addEventListener('click', e => {
+  if (!e.target.closest || !e.target.closest('.cd-sort-wrap')) toggleCustomerSortMenu(null, false);
+});
 
 function toggleCustomerSearch(force) {
   const wrap = document.getElementById('custSearchWrap');
@@ -1344,7 +1424,8 @@ function handleCustomerSubmit(e) {
       gstin: gstNumber,
       balance: 0,
       creditLimit: 50000,
-      photo
+      photo,
+      createdAt: new Date().toISOString()
     };
     appState.customers.unshift(newCust);
     showToast('Customer saved successfully!');

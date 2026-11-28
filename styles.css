@@ -477,3 +477,25 @@ header {
   padding: 2.5rem 1rem; color: #94a3b8; font-size: 0.875rem; font-weight: 500;
 }
 .cd-empty.hidden { display: none; }
+
+/* Sort (three-dot) menu */
+.cd-header-actions { display: flex; align-items: center; gap: 0.5rem; }
+.cd-sort-wrap { position: relative; }
+.cd-sort-menu {
+  position: absolute; right: 0; top: calc(100% + 0.4rem); z-index: 40; min-width: 13.5rem;
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 0.35rem;
+  box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.2), 0 4px 8px -4px rgba(15, 23, 42, 0.08);
+  opacity: 0; transform: translateY(-6px) scale(0.97); transform-origin: top right;
+  pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.cd-sort-menu.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.cd-sort-item {
+  width: 100%; display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.65rem 0.75rem; border: 0; background: transparent; border-radius: 0.7rem;
+  font-size: 0.875rem; font-weight: 600; color: #334155; text-align: left; cursor: pointer;
+}
+.cd-sort-item span { flex: 1; }
+.cd-sort-item:hover { background: #f1f5f9; }
+.cd-sort-item.selected { background: #f0f9ff; color: #0284c7; }
+.cd-sort-check { visibility: hidden; }
+.cd-sort-item.selected .cd-sort-check { visibility: visible; }
